@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #0d0f11;
+  --color-bg-card: #14171a;
+  --color-bg-hover: #1b1f23;
+
+  --color-accent: #1b7f8f;
+  --color-accent-glow: #5bb4c2;
+
+  --color-success: #3fae84;
+  --color-warning: #d1a24a;
+  --color-danger: #e06a6d;
+  --color-muted: #8a9199;
+
+  --color-gray-100: #eceef0;
+  --color-gray-200: #d6d9dc;
+  --color-gray-300: #b4b9be;
+  --color-gray-400: #8a9199;
+  --color-gray-500: #6b7178;
+
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+}
+
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: rgb(255 255 255 / 0.08);
+  }
+}
+
+@utility card {
+  @apply rounded-lg bg-bg-card border border-white/[0.07] p-5;
+}
+
+@utility btn-primary {
+  @apply rounded-md bg-accent hover:bg-accent/85 text-white text-sm font-medium px-3.5 py-2 transition-colors;
+}
+
+@utility btn-ghost {
+  @apply rounded-md border border-white/10 hover:bg-white/5 text-gray-200 text-sm px-3.5 py-2 transition-colors;
+}
+
+@utility input {
+  @apply rounded-md bg-bg border border-white/10 focus:border-accent focus:outline-hidden px-3 py-2 text-sm text-gray-100;
+}
+
+@utility badge {
+  @apply inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium;
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    @apply h-full;
+  }
+  body {
+    @apply bg-bg text-gray-100 antialiased;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgb(255 255 255 / 0.08);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(255 255 255 / 0.15);
+}
