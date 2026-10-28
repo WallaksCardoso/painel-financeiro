@@ -4,6 +4,8 @@ cd /d "%~dp0"
 
 call "%~dp0parar.bat" >nul 2>&1
 
+if defined PAINEL_BACKUP_DIR call "%~dp0backup.bat"
+
 echo.
 echo  ========================================
 echo   Iniciando Painel Financeiro

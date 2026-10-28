@@ -82,10 +82,33 @@ atualizado na subida pelas migrações do Alembic. Para uma mudança de esquema:
 
 ## Backup
 
-Com o painel parado (`parar.bat`), copie o arquivo `backend/painel.db` para fora da pasta do
-projeto, de preferência com a data no nome. Para restaurar, pare o painel e coloque a cópia de volta
-no lugar com o nome `painel.db`; na próxima subida, as migrações atualizam o banco se ele for de uma
-versão antiga. No Docker, o banco fica no volume `dados`:
+O comando de backup copia o banco para uma pasta, com data e hora no nome
+(`painel-2026-03-05-083000.db`), confere a integridade da cópia e mantém as 30 mais recentes. Pode
+rodar com o painel aberto.
+
+```bash
+cd backend
+python -m app.backup <pasta>             # ou defina PAINEL_BACKUP_DIR e omita a pasta
+python -m app.backup <pasta> --manter 0  # guarda todas as cópias
+```
+
+No Windows, `backup.bat <pasta>` faz o mesmo. Para automatizar, defina a pasta uma vez (uma pasta
+do OneDrive ou de outro serviço de nuvem tira a cópia da máquina) e abra um novo terminal:
+
+```bat
+setx PAINEL_BACKUP_DIR "%USERPROFILE%\OneDrive\Backups\painel-financeiro"
+```
+
+Com a variável definida, o `iniciar.bat` faz um backup antes de subir o painel. Para ter também uma
+cópia diária mesmo sem abrir o painel, agende o `backup.bat` no Agendador de Tarefas:
+
+```bat
+schtasks /create /tn "Painel Financeiro - Backup" /sc daily /st 20:00 /tr "\"C:\caminho\do\painel-financeiro\backup.bat\""
+```
+
+Para restaurar, pare o painel (`parar.bat`) e coloque a cópia no lugar de `backend/painel.db`, com
+esse nome; na próxima subida, as migrações atualizam o banco se ele for de uma versão antiga. No
+Docker, o banco fica no volume `dados`:
 
 ```bash
 docker compose cp backend:/data/painel.db ./painel-backup.db
@@ -128,6 +151,7 @@ backend/
     services/        regras de negócio: fatura, projecao, recorrentes, mes, dividas…
     routers/         rotas HTTP
     demo.py          dados fictícios de demonstração
+    backup.py        cópia do banco com data no nome (python -m app.backup)
   migrations/        migrações do banco (Alembic)
   tests/             um arquivo por assunto
 frontend/
