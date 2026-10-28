@@ -1,0 +1,28 @@
+{
+  "attribution": {
+    "commit": "",
+    "pr": ""
+  },
+  "permissions": {
+    "allow": [
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git show*)",
+      "Bash(./.venv/Scripts/python.exe -m pytest*)",
+      "Bash(./.venv/Scripts/python.exe -m ruff*)",
+      "Bash(./.venv/Scripts/python.exe -m app.demo)",
+      "Bash(./.venv/Scripts/python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000*)",
+      "Bash(npm run lint)",
+      "Bash(npm run typecheck)",
+      "Bash(npm run test)",
+      "Bash(npm run build)",
+      "Bash(npm run dev)"
+    ],
+    "deny": [
+      "Read(backend/*.db)",
+      "Bash(git push --force*)",
+      "Bash(git push -f*)"
+    ]
+  }
+}
