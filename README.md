@@ -2,9 +2,9 @@
 
 [![CI](https://github.com/WallaksCardoso/painel-financeiro/actions/workflows/ci.yml/badge.svg)](https://github.com/WallaksCardoso/painel-financeiro/actions/workflows/ci.yml)
 
-Painel pessoal de fluxo de caixa: mostra **quanto sobra em cada mês** com o que já está
-comprometido hoje (contas fixas, faturas de cartão, parcelas e dívidas) e **quando cada
-parcela termina**. Nasceu para substituir uma planilha mensal feita à mão.
+Meu painel de fluxo de caixa. Mostra quanto sobra em cada mês com o que já está comprometido
+hoje (contas fixas, faturas de cartão, parcelas e dívidas) e quando cada parcela termina. Fiz para
+substituir a planilha que eu atualizava à mão todo mês.
 
 ![Fluxo de caixa](docs/img/fluxo.jpg)
 
@@ -16,45 +16,31 @@ parcela termina**. Nasceu para substituir uma planilha mensal feita à mão.
 
 > Os prints usam os dados fictícios do comando de demonstração (veja abaixo).
 
-## O que ele faz
+## O que tem
 
-- **Fluxo de caixa** — entradas, contas, quitações, investimentos e fatura mês a mês, com
-  sobra, acumulado e o aviso de quando cada parcela acaba.
-- **Mês** — receitas, despesas fixas (contas + assinaturas e parcelas do cartão), outras
-  saídas, dívidas do mês e um plano com meta, limite do cartão e anotações.
-- **Cartões** — fatura calculada pelo dia de fechamento, separação entre fixos e compras do
-  dia a dia, compras "em andamento" cadastradas como _parcela 7 de 12_ e marcação de
-  pagamento.
-- **Transações** — lançamentos mensais, eventuais e parcelados (_n de N_), com os meses
-  seguintes previstos automaticamente.
-- **Dívidas, reserva de emergência e orçamento por categoria**.
-- **Configurações** — categorias, meios de pagamento e demais valores editáveis pela tela;
-  nada de dado do usuário fixo no código.
-- **Exportar** — backup completo em JSON.
+O fluxo de caixa mês a mês (entradas, contas, quitações, investimentos e fatura, com sobra e
+acumulado), a visão de um mês com o plano e a meta, os cartões com a fatura de cada um, as
+transações (mensais, eventuais e parceladas), dívidas, reserva de emergência e orçamento por
+categoria. Categorias, meios de pagamento e os demais valores se editam pela tela, e dá para
+exportar tudo em JSON.
 
-## Decisões e regras que valem destacar
+## Regras que deram trabalho
 
-- **Fatura pelo fechamento, caixa pelo vencimento.** Uma compra entra na fatura do mês em que
-  ela fecha; no fluxo de caixa, a fatura conta no mês em que vence — inclusive quando o
-  vencimento cai no mês seguinte ao fechamento.
-- **Dinheiro em centavos.** Parcelas são divididas em centavos e o que sobra vai para as
-  últimas (R$ 100 em 3× = 33,33 + 33,33 + 33,34), sem erro de ponto flutuante na soma.
-- **Recorrências previstas.** Um lançamento mensal gera previsões nos meses seguintes a partir
-  do mais recente. O "dia habitual" é deduzido do histórico reconhecendo ajustes de dia útil
-  (fins de semana e feriados nacionais, incluindo os móveis calculados a partir da Páscoa):
-  salário antecipado por feriado não vira o novo padrão, e a previsão já cai em dia útil.
-- **Sem duplicar em cliques simultâneos.** A geração dos recorrentes é idempotente e protegida
-  por trava, com teste que dispara requisições em paralelo.
-- **Validação em todas as entradas** — Pydantic nos schemas e regras de negócio no service
-  (ex.: uma quitação não pode passar do que falta da dívida; a reserva não pode ficar negativa
-  em nenhuma data do histórico).
-- **Camadas separadas** — rotas só tratam HTTP; regras ficam em `services/`.
+- Fatura pelo fechamento, caixa pelo vencimento. A compra entra na fatura do mês em que ela fecha,
+  mas no fluxo de caixa a fatura conta no mês em que vence, mesmo quando o vencimento cai no mês
+  seguinte ao fechamento.
+- Dinheiro em centavos. As parcelas são divididas em centavos e a sobra vai para as últimas
+  (R$ 100 em 3x = 33,33 + 33,33 + 33,34).
+- Recorrências. Um lançamento mensal gera a previsão dos meses seguintes, e o dia habitual é deduzido
+  do histórico. Salário antecipado por causa de feriado (inclusive os móveis, calculados a partir da
+  Páscoa) não vira o novo padrão, e a previsão já cai em dia útil.
+- Cliques simultâneos não duplicam os recorrentes: a geração é idempotente e tem trava, com um teste
+  que dispara requisições em paralelo.
+- Uma quitação não passa do que falta da dívida, e a reserva não fica negativa em nenhuma data do
+  histórico.
 
-## Stack
-
-- **Backend:** Python 3.12 · FastAPI · SQLAlchemy 2 · Alembic · Pydantic 2 · SQLite · pytest · ruff
-- **Frontend:** React 19 · TypeScript (strict) · Vite · Tailwind CSS 4 · Recharts · Vitest · ESLint · Prettier
-- **Infra:** Docker Compose (nginx servindo o frontend e fazendo proxy da API) · GitHub Actions
+Backend em Python 3.12 com FastAPI, SQLAlchemy 2, Alembic e SQLite. Frontend em React 19 com
+TypeScript, Vite, Tailwind CSS 4 e Recharts. Docker Compose com nginx na frente e GitHub Actions.
 
 ## Como rodar
 
@@ -94,6 +80,20 @@ O banco é um arquivo SQLite (`backend/painel.db`, ou o caminho em `PAINEL_DB`),
 atualizado na subida pelas migrações do Alembic. Para uma mudança de esquema:
 `alembic revision --autogenerate -m "descrição"` dentro de `backend/`.
 
+## Backup
+
+Com o painel parado (`parar.bat`), copie o arquivo `backend/painel.db` para fora da pasta do
+projeto, de preferência com a data no nome. Para restaurar, pare o painel e coloque a cópia de volta
+no lugar com o nome `painel.db`; na próxima subida, as migrações atualizam o banco se ele for de uma
+versão antiga. No Docker, o banco fica no volume `dados`:
+
+```bash
+docker compose cp backend:/data/painel.db ./painel-backup.db
+```
+
+O botão Exportar gera um JSON com todos os dados, bom para consulta ou para levar a outra
+ferramenta, mas a restauração é pelo arquivo do banco.
+
 ## Qualidade
 
 ```bash
@@ -105,8 +105,8 @@ npm run lint && npm run format:check && npm run typecheck && npm test && npm run
 ```
 
 A CI roda tudo isso a cada push e monta as imagens Docker. Os testes do backend (pytest)
-cobrem as regras de domínio — fatura, parcelas, recorrências, dia útil, dívidas, reserva,
-orçamento — com um banco em memória por teste. No frontend, Vitest e Testing Library
+cobrem as regras de domínio (fatura, parcelas, recorrências, dia útil, dívidas, reserva e
+orçamento) com um banco em memória por teste. No frontend, Vitest e Testing Library
 testam formatação, datas, mensagens de erro e o comportamento de formulários.
 
 ## Commits
