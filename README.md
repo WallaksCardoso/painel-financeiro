@@ -93,10 +93,10 @@ python -m app.backup <pasta> --manter 0  # guarda todas as cópias
 ```
 
 No Windows, `backup.bat <pasta>` faz o mesmo. Para automatizar, defina a pasta uma vez (uma pasta
-do OneDrive ou de outro serviço de nuvem tira a cópia da máquina) e abra um novo terminal:
+do Google Drive ou de outro serviço de nuvem tira a cópia da máquina) e abra um novo terminal:
 
 ```bat
-setx PAINEL_BACKUP_DIR "%USERPROFILE%\OneDrive\Backups\painel-financeiro"
+setx PAINEL_BACKUP_DIR "G:\Meu Drive\Backups\painel-financeiro"
 ```
 
 Com a variável definida, o `iniciar.bat` faz um backup antes de subir o painel. Para ter também uma
