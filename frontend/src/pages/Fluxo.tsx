@@ -58,7 +58,9 @@ export default function Fluxo() {
   const atual = projecao.meses[0];
   const ultimo = projecao.meses[projecao.meses.length - 1];
   const proximaLiberacao = projecao.meses.find((m) => m.terminando.length > 0);
-  const mesesNegativos = projecao.meses.filter((m) => m.sobra < 0).length;
+  const temMeta = projecao.meses.some((m) => m.meta !== null);
+  const saldoFinal = (m: ProjecaoMes) => m.depois_da_meta ?? m.sobra;
+  const mesesNegativos = projecao.meses.filter((m) => saldoFinal(m) < 0).length;
 
   return (
     <div className="space-y-6">
@@ -115,7 +117,13 @@ export default function Fluxo() {
           titulo="Meses no vermelho"
           valor={String(mesesNegativos)}
           cor={mesesNegativos > 0 ? "danger" : "muted"}
-          legenda={mesesNegativos > 0 ? "Saídas maiores que entradas" : "Nenhum no período"}
+          legenda={
+            mesesNegativos > 0
+              ? temMeta
+                ? "A meta de poupança não cabe nesses meses"
+                : "Saídas maiores que entradas"
+              : "Nenhum no período"
+          }
         />
       </div>
 
@@ -149,6 +157,15 @@ export default function Fluxo() {
               <th className="text-right px-4 py-3">Cartão</th>
               <th className="text-right px-4 py-3">Investim.</th>
               <th className="text-right px-4 py-3">Sobra</th>
+              {temMeta && (
+                <>
+                  <th className="text-right px-4 py-3" title="Orçamento do variável definido na meta">
+                    Variável
+                  </th>
+                  <th className="text-right px-4 py-3">Meta</th>
+                  <th className="text-right px-4 py-3">Depois da meta</th>
+                </>
+              )}
               <th className="text-right px-4 py-3">Acumulado</th>
             </tr>
           </thead>
@@ -202,11 +219,33 @@ export default function Fluxo() {
                     >
                       {formatarReal(m.sobra)}
                     </td>
+                    {temMeta && (
+                      <>
+                        <td className="px-4 py-3 text-right tabular-nums text-gray-300">
+                          {m.variavel_estimado > 0 ? formatarReal(m.variavel_estimado) : "—"}
+                        </td>
+                        <td className="px-4 py-3 text-right tabular-nums text-gray-300">
+                          {m.meta !== null ? formatarReal(m.meta) : "—"}
+                        </td>
+                        <td
+                          className={[
+                            "px-4 py-3 text-right tabular-nums font-semibold",
+                            m.depois_da_meta === null
+                              ? "text-muted"
+                              : m.depois_da_meta < 0
+                                ? "text-danger"
+                                : "text-success",
+                          ].join(" ")}
+                        >
+                          {m.depois_da_meta !== null ? formatarReal(m.depois_da_meta) : "—"}
+                        </td>
+                      </>
+                    )}
                     <td className="px-4 py-3 text-right tabular-nums text-muted">
                       {formatarReal(m.acumulado)}
                     </td>
                   </tr>
-                  {expandido && <DetalheMes mes={m} />}
+                  {expandido && <DetalheMes mes={m} colunas={temMeta ? 11 : 8} />}
                 </Fragment>
               );
             })}
@@ -251,10 +290,10 @@ export default function Fluxo() {
   );
 }
 
-function DetalheMes({ mes }: { mes: ProjecaoMes }) {
+function DetalheMes({ mes, colunas }: { mes: ProjecaoMes; colunas: number }) {
   return (
     <tr className="bg-black/20">
-      <td colSpan={8} className="px-4 py-4">
+      <td colSpan={colunas} className="px-4 py-4">
         {mes.terminando.length > 0 && (
           <p className="text-sm text-warning mb-3">
             Última parcela:{" "}

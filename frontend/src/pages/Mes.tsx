@@ -15,7 +15,16 @@ import { NOMES_MESES, rotuloSituacao } from "../lib/constantes";
 import { dataPadrao } from "../lib/datas";
 import { formatarReal, plural } from "../lib/formatar";
 import { toast } from "../toast";
-import type { CompraCartao, ItemMes, PlanoMesInput, Transacao, TransacaoInput } from "../types";
+import { Link } from "react-router-dom";
+import type {
+  CompraCartao,
+  ItemMes,
+  LivreParaGastar,
+  MetaDoMes,
+  PlanoMesInput,
+  Transacao,
+  TransacaoInput,
+} from "../types";
 
 type Edicao =
   | { tipo: "transacao"; inicial: TransacaoInput; editando: Transacao | null }
@@ -184,7 +193,7 @@ export default function Mes() {
             </div>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
             <Card
               titulo="Gasto fixo do mês"
               valor={formatarReal(m.gasto_fixo)}
@@ -202,11 +211,11 @@ export default function Mes() {
               }
             />
             <CardMeta
+              meta={m.meta}
               descricao={m.plano.meta_descricao}
-              valor={m.plano.meta_valor}
-              dividas={m.total_dividas}
               aoDefinir={() => setEdicao({ tipo: "plano" })}
             />
+            <CardLivre livre={m.livre_para_gastar} temMeta={m.meta.valor !== null} />
             <CardLimite
               usado={m.cartao_variavel}
               limite={m.plano.limite_cartao}
@@ -599,31 +608,69 @@ function TabelaItens({
 }
 
 function CardMeta({
+  meta,
   descricao,
-  valor,
-  dividas,
   aoDefinir,
 }: {
+  meta: MetaDoMes;
   descricao: string | null;
-  valor: number | null;
-  dividas: number;
   aoDefinir: () => void;
 }) {
-  if (valor === null) {
+  if (meta.valor === null) {
     return (
-      <button type="button" onClick={aoDefinir} className="card text-left hover:border-accent/30 transition">
-        <p className="text-sm text-muted">Meta do mês</p>
-        <p className="mt-2 text-sm text-muted">Sem meta para este mês. Clique para definir.</p>
-      </button>
+      <div className="card">
+        <p className="text-sm text-muted">Meta de poupança</p>
+        <p className="mt-1.5 text-2xl font-semibold tracking-tight">{formatarReal(meta.guardado)}</p>
+        <p className="mt-1 text-xs text-muted">
+          Guardado no mês, sem meta.{" "}
+          <Link to="/configuracoes" className="text-accent hover:underline">
+            Definir meta
+          </Link>
+        </p>
+      </div>
     );
   }
+  const cumpriu = meta.falta <= 0;
+  const pct = meta.valor > 0 ? Math.min(Math.max(meta.guardado / meta.valor, 0) * 100, 100) : 100;
   return (
-    <Card
-      titulo="Meta do mês"
-      valor={formatarReal(valor)}
-      cor="accent"
-      legenda={`${descricao ?? "Meta"} · dívidas no mês: ${formatarReal(dividas)}`}
-    />
+    <button type="button" onClick={aoDefinir} className="card text-left hover:border-accent/30 transition">
+      <p className="text-sm text-muted">Meta de poupança{meta.origem === "mes" ? " (só este mês)" : ""}</p>
+      <p className="mt-1.5 text-2xl font-semibold tracking-tight text-accent">{formatarReal(meta.valor)}</p>
+      <div className="mt-2 h-1.5 rounded-full bg-white/10 overflow-hidden">
+        <div
+          className={["h-full rounded-full", cumpriu ? "bg-success" : "bg-accent"].join(" ")}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <p className="mt-1 text-xs text-muted">
+        {descricao ? `${descricao} · ` : ""}Guardado {formatarReal(meta.guardado)} ·{" "}
+        {cumpriu ? "meta cumprida" : `faltam ${formatarReal(meta.falta)}`}
+      </p>
+    </button>
+  );
+}
+
+function CardLivre({ livre, temMeta }: { livre: LivreParaGastar; temMeta: boolean }) {
+  const negativo = livre.restante < 0;
+  return (
+    <div className="card">
+      <p className="text-sm text-muted">Livre para gastar</p>
+      <p
+        className={[
+          "mt-1.5 text-2xl font-semibold tracking-tight",
+          negativo ? "text-danger" : "text-success",
+        ].join(" ")}
+      >
+        {formatarReal(livre.restante)}
+      </p>
+      <p className="mt-1 text-xs text-muted">
+        {livre.por_semana !== null && !negativo
+          ? `≈ ${formatarReal(livre.por_semana)} por semana (${plural(livre.semanas, "semana", "semanas")}) · `
+          : ""}
+        Já gasto no variável: {formatarReal(livre.gasto_variavel)}
+        {temMeta ? " · já descontada a meta" : ""}
+      </p>
+    </div>
   );
 }
 

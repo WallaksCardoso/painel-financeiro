@@ -246,6 +246,9 @@ export interface ProjecaoMes {
   saidas: number;
   sobra: number;
   acumulado: number;
+  meta: number | null;
+  variavel_estimado: number;
+  depois_da_meta: number | null;
   linhas: LinhaProjecao[];
   terminando: ParcelaTerminando[];
 }
@@ -316,4 +319,33 @@ export interface ResumoMesPlano {
   sobra_primeira_entrada: number | null;
   livre: number;
   previstos: number;
+  meta: MetaDoMes;
+  livre_para_gastar: LivreParaGastar;
+}
+
+export interface MetaPoupancaInput {
+  valor: number;
+  orcamento_variavel: number | null;
+  mes: number;
+  ano: number;
+}
+
+export interface MetaPoupanca extends MetaPoupancaInput {
+  id: number;
+}
+
+export interface MetaDoMes {
+  valor: number | null;
+  origem: "mes" | "recorrente" | null;
+  orcamento_variavel: number | null;
+  guardado: number;
+  falta: number;
+}
+
+export interface LivreParaGastar {
+  disponivel: number;
+  gasto_variavel: number;
+  restante: number;
+  semanas: number;
+  por_semana: number | null;
 }

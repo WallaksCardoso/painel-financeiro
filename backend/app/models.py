@@ -192,3 +192,15 @@ class PlanoMes(Base):
     meta_valor: Mapped[float | None] = mapped_column(Float, nullable=True)
     limite_cartao: Mapped[float | None] = mapped_column(Float, nullable=True)
     anotacoes: Mapped[str | None] = mapped_column(String(4000), nullable=True)
+
+
+class MetaPoupanca(Base):
+    __tablename__ = "metas_poupanca"
+    __table_args__ = (UniqueConstraint("mes", "ano", name="uq_meta_poupanca_inicio"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    valor: Mapped[float] = mapped_column(Float)
+    orcamento_variavel: Mapped[float | None] = mapped_column(Float, nullable=True)
+    mes: Mapped[int] = mapped_column(Integer)
+    ano: Mapped[int] = mapped_column(Integer)
+    criado_em: Mapped[datetime] = mapped_column(DateTime, default=_agora)

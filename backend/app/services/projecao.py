@@ -1,3 +1,5 @@
+from datetime import date
+
 from sqlalchemy import extract
 from sqlalchemy.orm import Session
 
@@ -11,6 +13,7 @@ from .fatura import (
     valores_parcelas,
     vencimento,
 )
+from .metas import meta_do_mes
 from .recorrentes import previsoes_do_mes
 
 GRUPO_POR_TIPO = {
@@ -138,7 +141,8 @@ def _sem_valor(db: Session, cartoes: list[Cartao]) -> list[str]:
     return sorted(nomes)
 
 
-def projetar(db: Session, mes: int, ano: int, meses: int) -> Projecao:
+def projetar(db: Session, mes: int, ano: int, meses: int, hoje: date | None = None) -> Projecao:
+    hoje = hoje or date.today()
     cartoes = db.query(Cartao).filter(Cartao.ativo.is_(True)).all()
     resultado: list[ProjecaoMes] = []
     acumulado = 0.0
@@ -157,6 +161,15 @@ def projetar(db: Session, mes: int, ano: int, meses: int) -> Projecao:
         saidas = round(soma("conta") + soma("quitacao") + soma("investimento") + soma("cartao"), 2)
         sobra = round(entradas - saidas, 2)
         acumulado = round(acumulado + sobra, 2)
+        investimentos = soma("investimento")
+        meta = meta_do_mes(db, m, a)
+        futuro = (a, m) > (hoje.year, hoje.month)
+        variavel = round(meta.orcamento_variavel or 0, 2) if futuro else 0.0
+        depois = (
+            round(sobra - variavel - max(meta.valor - investimentos, 0), 2)
+            if meta.valor is not None
+            else None
+        )
         resultado.append(
             ProjecaoMes(
                 mes=m,
@@ -164,11 +177,14 @@ def projetar(db: Session, mes: int, ano: int, meses: int) -> Projecao:
                 entradas=entradas,
                 contas=soma("conta"),
                 quitacoes=soma("quitacao"),
-                investimentos=soma("investimento"),
+                investimentos=investimentos,
                 cartao=soma("cartao"),
                 saidas=saidas,
                 sobra=sobra,
                 acumulado=acumulado,
+                meta=meta.valor,
+                variavel_estimado=variavel,
+                depois_da_meta=depois,
                 linhas=linhas,
                 terminando=terminando,
             )

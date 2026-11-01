@@ -13,6 +13,7 @@ from ..models import (
     Configuracao,
     Divida,
     FaturaPaga,
+    MetaPoupanca,
     MovimentoReserva,
     Opcao,
     OrcamentoCategoria,
@@ -33,6 +34,7 @@ _MODELOS = {
     "opcoes": Opcao,
     "configuracoes": Configuracao,
     "planos_mes": PlanoMes,
+    "metas_poupanca": MetaPoupanca,
 }
 
 

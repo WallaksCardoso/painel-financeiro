@@ -418,6 +418,9 @@ class ProjecaoMes(BaseModel):
     saidas: float
     sobra: float
     acumulado: float
+    meta: float | None = None
+    variavel_estimado: float = 0.0
+    depois_da_meta: float | None = None
     linhas: list[LinhaProjecao]
     terminando: list[ParcelaTerminando]
 
@@ -472,6 +475,34 @@ class PlanoMesOut(PlanoMesIn):
     salvo: bool
 
 
+class MetaPoupancaIn(BaseModel):
+    valor: float = Field(ge=0)
+    orcamento_variavel: float | None = Field(None, ge=0)
+    mes: int = Field(ge=1, le=12)
+    ano: int = Field(ge=2000, le=2100)
+
+
+class MetaPoupancaOut(MetaPoupancaIn):
+    id: int
+    model_config = ConfigDict(from_attributes=True)
+
+
+class MetaDoMes(BaseModel):
+    valor: float | None
+    origem: Literal["mes", "recorrente"] | None
+    orcamento_variavel: float | None
+    guardado: float
+    falta: float
+
+
+class LivreParaGastar(BaseModel):
+    disponivel: float
+    gasto_variavel: float
+    restante: float
+    semanas: int
+    por_semana: float | None
+
+
 class ItemMes(BaseModel):
     origem: Literal["transacao", "compra", "previsto"]
     tipo: Literal["receita", "despesa", "investimento", "quitacao", "beneficio", "cartao"]
@@ -509,3 +540,5 @@ class ResumoMesPlano(BaseModel):
     sobra_primeira_entrada: float | None
     livre: float
     previstos: int
+    meta: MetaDoMes
+    livre_para_gastar: LivreParaGastar

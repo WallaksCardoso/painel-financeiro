@@ -1,11 +1,12 @@
 import { Check, Pencil, Plus, Trash2, X } from "lucide-react";
 import { useState, type FormEvent } from "react";
-import { configApi, opcoesApi } from "../api";
+import { configApi, metasApi, opcoesApi } from "../api";
 import { useOpcoes } from "../contexts/Opcoes";
 import { useCarregar } from "../hooks/useCarregar";
+import { NOMES_MESES } from "../lib/constantes";
 import { formatarReal } from "../lib/formatar";
 import { toast } from "../toast";
-import type { GrupoOpcao, Opcao } from "../types";
+import type { GrupoOpcao, MetaPoupanca, MetaPoupancaInput, Opcao } from "../types";
 
 const GRUPOS: { grupo: GrupoOpcao; titulo: string; ajuda: string }[] = [
   {
@@ -35,6 +36,8 @@ export default function Configuracoes() {
         </p>
       </header>
 
+      <MetasPoupanca />
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <ConfigNumero
           chave="meta_reserva"
@@ -56,6 +59,158 @@ export default function Configuracoes() {
           <ListaEditavel key={g.grupo} {...g} />
         ))}
       </div>
+    </div>
+  );
+}
+
+function proximoMes(): { mes: number; ano: number } {
+  const hoje = new Date();
+  const mes = hoje.getMonth() + 2;
+  return mes > 12 ? { mes: 1, ano: hoje.getFullYear() + 1 } : { mes, ano: hoje.getFullYear() };
+}
+
+function metaVazia(): MetaPoupancaInput {
+  return { valor: 0, orcamento_variavel: null, ...proximoMes() };
+}
+
+function MetasPoupanca() {
+  const { dados: metas, recarregar } = useCarregar(() => metasApi.listar(), []);
+  const [form, setForm] = useState<MetaPoupancaInput>(metaVazia);
+  const [editandoId, setEditandoId] = useState<number | null>(null);
+
+  function editar(m: MetaPoupanca) {
+    setEditandoId(m.id);
+    setForm({ valor: m.valor, orcamento_variavel: m.orcamento_variavel, mes: m.mes, ano: m.ano });
+  }
+
+  function cancelar() {
+    setEditandoId(null);
+    setForm(metaVazia());
+  }
+
+  async function salvar(e: FormEvent) {
+    e.preventDefault();
+    try {
+      if (editandoId === null) await metasApi.criar(form);
+      else await metasApi.atualizar(editandoId, form);
+    } catch {
+      return;
+    }
+    toast.sucesso("Meta de poupança salva.");
+    cancelar();
+    recarregar();
+  }
+
+  async function remover(m: MetaPoupanca) {
+    try {
+      await metasApi.remover(m.id);
+    } catch {
+      return;
+    }
+    toast.sucesso("Meta removida.");
+    if (editandoId === m.id) cancelar();
+    recarregar();
+  }
+
+  return (
+    <div className="card space-y-4">
+      <div>
+        <h3 className="font-semibold">Meta de poupança</h3>
+        <p className="text-xs text-muted mt-0.5">
+          Quanto guardar por mês a partir de um mês. Vale para todos os meses seguintes até a próxima meta;
+          para mudar um mês só, use o "Plano do mês". O orçamento do variável é a estimativa de gastos do dia
+          a dia usada no Fluxo de caixa.
+        </p>
+      </div>
+
+      {metas && metas.length > 0 && (
+        <ul className="divide-y divide-white/5">
+          {metas.map((m) => (
+            <li key={m.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 py-2">
+              <p className="flex-1 min-w-[200px]">
+                A partir de {NOMES_MESES[m.mes - 1].toLowerCase()} de {m.ano}: guardar{" "}
+                <span className="font-semibold">{formatarReal(m.valor)}</span>
+                {m.orcamento_variavel !== null && (
+                  <span className="text-muted"> · variável {formatarReal(m.orcamento_variavel)}</span>
+                )}
+              </p>
+              <button type="button" className="btn-ghost p-1.5!" title="Editar" onClick={() => editar(m)}>
+                <Pencil className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                className="btn-ghost p-1.5! text-danger"
+                title="Apagar"
+                onClick={() => remover(m)}
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <form onSubmit={salvar} className="flex flex-wrap items-end gap-3">
+        <label>
+          <span className="text-xs text-muted">Guardar por mês (R$)</span>
+          <input
+            className="input w-36 mt-1"
+            type="number"
+            step={0.01}
+            min={0}
+            required
+            value={form.valor || ""}
+            onChange={(e) => setForm({ ...form, valor: Number(e.target.value) })}
+          />
+        </label>
+        <label>
+          <span className="text-xs text-muted">Orçamento do variável (R$, opcional)</span>
+          <input
+            className="input w-36 mt-1"
+            type="number"
+            step={0.01}
+            min={0}
+            value={form.orcamento_variavel ?? ""}
+            onChange={(e) =>
+              setForm({ ...form, orcamento_variavel: e.target.value === "" ? null : Number(e.target.value) })
+            }
+          />
+        </label>
+        <label>
+          <span className="text-xs text-muted">A partir de</span>
+          <div className="flex gap-2 mt-1">
+            <select
+              className="input"
+              value={form.mes}
+              onChange={(e) => setForm({ ...form, mes: Number(e.target.value) })}
+            >
+              {NOMES_MESES.map((nome, i) => (
+                <option key={nome} value={i + 1}>
+                  {nome}
+                </option>
+              ))}
+            </select>
+            <input
+              className="input w-24"
+              type="number"
+              min={2000}
+              max={2100}
+              required
+              value={form.ano}
+              onChange={(e) => setForm({ ...form, ano: Number(e.target.value) })}
+            />
+          </div>
+        </label>
+        <button type="submit" className="btn-primary flex items-center gap-2">
+          {editandoId === null ? <Plus className="h-4 w-4" /> : <Check className="h-4 w-4" />}
+          {editandoId === null ? "Adicionar" : "Salvar"}
+        </button>
+        {editandoId !== null && (
+          <button type="button" className="btn-ghost flex items-center gap-2" onClick={cancelar}>
+            <X className="h-4 w-4" /> Cancelar
+          </button>
+        )}
+      </form>
     </div>
   );
 }

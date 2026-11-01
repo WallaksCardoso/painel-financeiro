@@ -13,6 +13,8 @@ import type {
   FaturaPaga,
   FaturaPagaInput,
   GrupoOpcao,
+  MetaPoupanca,
+  MetaPoupancaInput,
   Opcao,
   PlanoMes,
   PlanoMesInput,
@@ -147,6 +149,14 @@ export const mesApi = {
   resumo: (mes: number, ano: number) => http.get<ResumoMesPlano>(`/mes/${ano}/${mes}`).then((r) => r.data),
   salvarPlano: (mes: number, ano: number, data: PlanoMesInput) =>
     http.put<PlanoMes>(`/mes/${ano}/${mes}/plano`, data).then((r) => r.data),
+};
+
+export const metasApi = {
+  listar: () => http.get<MetaPoupanca[]>("/metas").then((r) => r.data),
+  criar: (data: MetaPoupancaInput) => http.post<MetaPoupanca>("/metas", data).then((r) => r.data),
+  atualizar: (id: number, data: MetaPoupancaInput) =>
+    http.put<MetaPoupanca>(`/metas/${id}`, data).then((r) => r.data),
+  remover: (id: number) => http.delete(`/metas/${id}`).then(() => undefined),
 };
 
 export const opcoesApi = {

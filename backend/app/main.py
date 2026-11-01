@@ -10,6 +10,7 @@ from .routers import (
     dashboard,
     dividas,
     mes,
+    metas,
     opcoes,
     orcamento,
     projecao,
@@ -48,6 +49,7 @@ app.include_router(orcamento.router)
 app.include_router(dashboard.router)
 app.include_router(projecao.router)
 app.include_router(mes.router)
+app.include_router(metas.router)
 app.include_router(opcoes.router)
 app.include_router(sistema.router)
 
