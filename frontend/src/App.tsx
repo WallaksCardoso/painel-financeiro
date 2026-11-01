@@ -28,7 +28,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Layout />}>
-        <Route index element={<Navigate to="/fluxo" replace />} />
+        <Route index element={<Navigate to="/mes" replace />} />
         {PAGINAS.map(({ caminho, Pagina }) => (
           <Route
             key={caminho}
@@ -40,7 +40,7 @@ export default function App() {
             }
           />
         ))}
-        <Route path="*" element={<Navigate to="/fluxo" replace />} />
+        <Route path="*" element={<Navigate to="/mes" replace />} />
       </Route>
     </Routes>
   );

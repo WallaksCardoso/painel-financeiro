@@ -4,13 +4,10 @@ import {
   ChevronRight,
   CreditCard,
   Download,
-  LayoutDashboard,
   PiggyBank,
-  Receipt,
   Settings,
   Target,
   TrendingUp,
-  Wallet,
   type LucideIcon,
 } from "lucide-react";
 import { useState } from "react";
@@ -23,17 +20,14 @@ interface ItemMenu {
 }
 
 const principais: ItemMenu[] = [
-  { to: "/fluxo", label: "Fluxo de caixa", Icon: TrendingUp },
   { to: "/mes", label: "Mês", Icon: CalendarDays },
   { to: "/cartoes", label: "Cartões", Icon: CreditCard },
-  { to: "/transacoes", label: "Transações", Icon: Receipt },
-  { to: "/dashboard", label: "Dashboard", Icon: LayoutDashboard },
+  { to: "/dividas", label: "Dívidas", Icon: Target },
 ];
 
 const mais: ItemMenu[] = [
-  { to: "/dividas", label: "Dívidas", Icon: Target },
+  { to: "/fluxo", label: "Fluxo de caixa", Icon: TrendingUp },
   { to: "/reserva", label: "Reserva", Icon: PiggyBank },
-  { to: "/orcamento", label: "Orçamento", Icon: Wallet },
   { to: "/configuracoes", label: "Configurações", Icon: Settings },
 ];
 
